@@ -1,26 +1,23 @@
-import 'package:do_an_tk/api/auth.dart';
-import 'package:do_an_tk/const/colors.dart';
-import 'package:do_an_tk/ui/register.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
+import 'package:do_an_tk/ui/login.dart';
+import 'package:do_an_tk/ui/my_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'my_home_page.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+import '../const/colors.dart';
 
+class RegisterPage extends StatefulWidget{
   @override
-  _LoginScreenState createState() {
-    return _LoginScreenState();
+  _RegisterPageState createState() {
+    return _RegisterPageState();
   }
-}
 
-class _LoginScreenState extends State<LoginScreen> {
+}
+class _RegisterPageState extends State<StatefulWidget>{
   TextEditingController loginController = TextEditingController();
   TextEditingController passController = TextEditingController();
-  AuthApi dio = AuthApi();
-  final _auth = FirebaseAuth.instance;
-
+  TextEditingController confirmPasswordController = TextEditingController();
+  TextEditingController numberRoomController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: const Text(
-          "Smart building",
+          "Đăng ký",
           style: TextStyle(fontSize: 20),
         ),
       ),
@@ -39,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 30),
               Center(
                 child: Image.asset("assets/images.png"),
               ),
@@ -91,27 +87,58 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: passController,
                 ),
               ),
-              const SizedBox(height: 15),
-              Center(
-                child: InkWell(
-                  child: const Text(
-                    'Chưa có tài khoản? Chọn để đăng ký',
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic,
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: TextField(
+                  decoration: const InputDecoration(
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppColors.blue),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppColors.blue),
+                      ),
+                      counterStyle: TextStyle(color: AppColors.blue),
+                      labelText: "Nhắc lại mật khẩu",
+                      labelStyle: TextStyle(color: AppColors.blue),
+                      focusColor: AppColors.blue,
+                      icon: Icon(
+                        Icons.vpn_key,
                         color: AppColors.blue,
-                        decoration: TextDecoration.underline),
-                  ),
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => RegisterPage()));
-                  },
+                        size: 30,
+                      ),
+                      fillColor: AppColors.blue,
+                      contentPadding: EdgeInsets.all(8)),
+                  controller: confirmPasswordController,
                 ),
               ),
-              const SizedBox(height: 15),
+              Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: TextField(
+                  decoration: const InputDecoration(
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppColors.blue),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppColors.blue),
+                      ),
+                      counterStyle: TextStyle(color: AppColors.blue),
+                      labelText: "Số phòng",
+                      labelStyle: TextStyle(color: AppColors.blue),
+                      focusColor: AppColors.blue,
+                      icon: Icon(
+                        Icons.vpn_key,
+                        color: AppColors.blue,
+                        size: 30,
+                      ),
+                      fillColor: AppColors.blue,
+                      contentPadding: EdgeInsets.all(8)),
+                  controller: numberRoomController,
+                ),
+              ),
               Center(
                 child: OutlinedButton(
                   child: const Text(
-                    "Login",
+                    "Đăng ký",
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -119,31 +146,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(30))),
                   ),
-                  onPressed: () async {
-                    await Firebase.initializeApp();
+                  onPressed: () {
                     //route
-                    try {
-                      print(loginController.text);
-                      print(passController.text);
-                      var response = await _auth
-                          .signInWithEmailAndPassword(
-                              email: loginController.text,
-                              password: passController.text);
-                      // var response = await dio.signIn(loginController.text, passController.text);
-                      if (response != null) {
-                        print(response);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const MyHomePage()));
-                      }
-                    } on FirebaseAuthException catch (e) {
-                      if (e.code == 'user-not-found') {
-                        print('No user found for that email.');
-                      } else if (e.code == 'wrong-password') {
-                        print('Wrong password provided for that user.');
-                      }
-                    }
+                    Navigator.push(context, MaterialPageRoute(builder: (_)=> const LoginScreen()));
                   },
                 ),
               )
@@ -152,5 +157,32 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+  static Future<User?> registerUsingEmailPassword({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? user;
+    try {
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      user = userCredential.user;
+      await user!.updateProfile(displayName: name);
+      await user.reload();
+      user = auth.currentUser;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        print('The account already exists for that email.');
+      }
+    } catch (e) {
+      print(e);
+    }
+    return user;
   }
 }
