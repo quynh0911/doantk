@@ -55,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 300,
                 child: const Mjpeg(
                   fit: BoxFit.fill,
-                  stream: 'http://192.168.0.115/cam.mjpeg',
+                  stream: 'http://10.150.162.105/cam.mjpeg',
                   isLive: true
                 ),
                 decoration: const BoxDecoration(
